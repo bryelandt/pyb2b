@@ -16,7 +16,7 @@
     xmlns:ns14="http://www.fixm.aero/flight/4.2">
     <sendTime>{send_time:%Y-%m-%d %H:%M:%S}</sendTime>
     <dataset>
-        <type>OPERATIONAL</type>
+        <type>{dataset_type}</type>
     </dataset>
     <includeProposalFlights>{include_proposal}</includeProposalFlights>
     <includeForecastFlights>{include_forecast}</includeForecastFlights>

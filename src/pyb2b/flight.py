@@ -697,6 +697,7 @@ class FlightManagement:
         include_proposal: bool = False,
         include_forecast: bool = True,
         fields: None | list[str] = None,
+        dataset_type: str = "OPERATIONAL",
     ) -> None | FlightList:
         """Returns requested information about flights matching a criterion.
 
@@ -775,6 +776,7 @@ class FlightManagement:
 
             data = REQUESTS["FlightListByAerodromeRequest"].format(
                 send_time=pd.Timestamp("now", tz="utc"),
+                dataset_type=dataset_type,
                 start=start,
                 stop=stop,
                 requestedFlightFields="\n".join(
