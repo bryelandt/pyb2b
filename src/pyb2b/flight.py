@@ -836,13 +836,13 @@ class FlightManagement:
             numberOfAircraft=aircraft_number,
             aircraftType=aicraft_type,
             totalEstimatedElapsedTime=elapsed_time,
-            wakeTurbulenceCategory=wake_turbulence_category,
-            flightType=flight_type,
-            flightRules=flight_rules,
+            # wakeTurbulenceCategory=wake_turbulence_category,
+            # flightType=flight_type,
+            # flightRules=flight_rules,
             estimatedOffBlockTime=eobt,
             icaoRoute=icaoRoute,
             equipmentCapabilityAndStatus=equipment_capability,
-            surveillanceEquipment=surveillance_equipment,
-            otherInformation=other_information,
+            # surveillanceEquipment=surveillance_equipment,
+            # otherInformation=other_information,
         )
         return self.post(request)  # type: ignore
