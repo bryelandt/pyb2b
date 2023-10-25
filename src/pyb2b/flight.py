@@ -808,3 +808,39 @@ class FlightManagement:
             return FlightList.fromB2BReply(rep)
 
         return None
+
+    def flight_flow_impact(
+        self,
+        adep,
+        ades,
+        aircraft_id,
+        regmark,
+        aircraft_number,
+        aicraft_type,
+        elapsed_time,
+        wake_turbulence_category,
+        flight_type,
+        flight_rules,
+        eobt,
+        equipment_capability,
+        surveillance_equipment,
+        other_information,
+    ) -> B2BReply:
+        request = REQUESTS["FlightListByAerodromeRequest"].format(
+            send_time=pd.Timestamp("now", tz="utc"),
+            aerodromeOfDeparture=adep,
+            aerodromeOfDestination=ades,
+            aircraftId=aircraft_id,
+            registrationMark=regmark,
+            numberOfAircraft=aircraft_number,
+            aircraftType=aicraft_type,
+            totalEstimatedElapsedTime=elapsed_time,
+            wakeTurbulenceCategory=wake_turbulence_category,
+            flightType=flight_type,
+            flightRules=flight_rules,
+            estimatedOffBlockTime=eobt,
+            equipmentCapabilityAndStatus=equipment_capability,
+            surveillanceEquipment=surveillance_equipment,
+            otherInformation=other_information,
+        )
+        return self.post(request)  # type: ignore

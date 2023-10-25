@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import configparser
+import logging
 from pathlib import Path
 
 import requests
@@ -47,6 +48,7 @@ if nmb2b_mode not in ["OPS", "PREOPS"]:
 nmb2b_version = config.get("nmb2b", "version", fallback="26.0.0")
 
 if pkcs12_filename != "" and pkcs12_password != "":
+    logging.info(f"Starting PyB2B in {nmb2b_mode} mode...")
     b2b = B2B(
         getattr(B2B, nmb2b_mode),
         nmb2b_version,
