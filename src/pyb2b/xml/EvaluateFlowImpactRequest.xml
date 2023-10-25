@@ -23,20 +23,11 @@
                     <icaoId>{aircraftType}</icaoId>
                 </aircraftType>
                 <totalEstimatedElapsedTime>{totalEstimatedElapsedTime}</totalEstimatedElapsedTime>
-                <!-- <wakeTurbulenceCategory>{wakeTurbulenceCategory}</wakeTurbulenceCategory> -->
-                <!-- <flightType>{flightType}</flightType> -->
-                <!-- <flightRules>{flightRules}</flightRules> -->
                 <estimatedOffBlockTime>{estimatedOffBlockTime}</estimatedOffBlockTime>
                 <icaoRoute>{icaoRoute}</icaoRoute>
                 <equipmentCapabilityAndStatus>
                     {equipmentCapabilityAndStatus}
                 </equipmentCapabilityAndStatus>
-                <!-- <surveillanceEquipment>
-                    {surveillanceEquipment}
-                </surveillanceEquipment> -->
-                <!-- <otherInformation>
-                    {otherInformation}
-                </otherInformation> -->
             </flightPlan>
         </structured>
     </flightPlan>
