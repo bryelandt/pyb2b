@@ -827,7 +827,7 @@ class FlightManagement:
         surveillance_equipment,
         other_information,
     ) -> B2BReply:
-        request = REQUESTS["FlightListByAerodromeRequest"].format(
+        request = REQUESTS["EvaluateFlowImpactRequest"].format(
             send_time=pd.Timestamp("now", tz="utc"),
             aerodromeOfDeparture=adep,
             aerodromeOfDestination=ades,
