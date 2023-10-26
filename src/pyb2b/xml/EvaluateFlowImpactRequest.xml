@@ -25,7 +25,10 @@
                 <totalEstimatedElapsedTime>{totalEstimatedElapsedTime}</totalEstimatedElapsedTime>
                 <estimatedOffBlockTime>{estimatedOffBlockTime}</estimatedOffBlockTime>
                 <icaoRoute>{icaoRoute}</icaoRoute>
-                {equipmentCapabilityAndStatus}
+                <equipmentCapabilityAndStatus>
+                    {equipmentCapabilityAndStatus}
+                </equipmentCapabilityAndStatus>
+                {other_information}
             </flightPlan>
         </structured>
     </flightPlan>

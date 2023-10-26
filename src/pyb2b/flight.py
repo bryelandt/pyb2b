@@ -825,7 +825,7 @@ class FlightManagement:
         icaoRoute,
         equipment_capability,
         # surveillance_equipment,
-        # other_information,
+        other_information,
     ) -> B2BReply:
         request = REQUESTS["EvaluateFlowImpactRequest"].format(
             send_time=pd.Timestamp("now", tz="utc"),
@@ -843,6 +843,6 @@ class FlightManagement:
             icaoRoute=icaoRoute,
             equipmentCapabilityAndStatus=equipment_capability,
             # surveillanceEquipment=surveillance_equipment,
-            # otherInformation=other_information,
+            otherInformation=other_information,
         )
         return self.post(request)  # type: ignore
