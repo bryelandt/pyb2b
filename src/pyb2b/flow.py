@@ -184,8 +184,6 @@ class RegulationList(DataFrameMixin, B2BReply):
 
         refloc = "location/referenceLocation-"
 
-        for elt in self.reply:
-            print(list(elt.iter()))
         sendTime = self.reply.find("sendTime").text
 
         self.data = pd.DataFrame.from_records(
