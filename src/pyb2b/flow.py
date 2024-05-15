@@ -40,6 +40,7 @@ default_regulation_fields: Set[str] = {
 
 # https://github.com/python/mypy/issues/2511
 RegulationListTypeVar = TypeVar("RegulationListTypeVar", bound="RegulationList")
+ATFCMSituationTypeVar = TypeVar("ATFCMSituationTypeVar", bound="ATFCMSituation")
 
 
 class RegulationInfo(B2BReply):
@@ -94,9 +95,7 @@ class RegulationInfo(B2BReply):
     @property
     def location(self) -> Optional[str]:
         assert self.reply is not None
-        elt = self.reply.find(
-            "location/referenceLocation-ReferenceLocationAirspace/id"
-        )
+        elt = self.reply.find("location/referenceLocation-ReferenceLocationAirspace/id")
         if elt is not None:
             return elt.text
         elt = self.reply.find(
@@ -116,9 +115,7 @@ class RegulationInfo(B2BReply):
     def fl_max(self) -> int:
         assert self.reply is not None
         elt = self.reply.find("location/flightLevels/max/level")
-        return (
-            int(elt.text) if elt is not None and elt.text is not None else 999
-        )
+        return int(elt.text) if elt is not None and elt.text is not None else 999
 
     def __getattr__(self, name: str) -> str:
         cls = type(self)
@@ -163,7 +160,7 @@ class RegulationList(DataFrameMixin, B2BReply):
         instance = cls()
         instance.reply = tree
         instance.build_df()
-        return instance
+        return instance.data
 
     def __getitem__(self, item: str) -> Optional[RegulationInfo]:
         assert self.reply is not None
@@ -193,44 +190,50 @@ class RegulationList(DataFrameMixin, B2BReply):
                         if p.text is not None
                     },
                     **{
-                        "start": elt.find(  # type: ignore
-                            "applicability/wef"
-                        ).text
-                        if elt.find("applicability") is not None
-                        else None,
-                        "stop": elt.find(  # type: ignore
-                            "applicability/unt"
-                        ).text
-                        if elt.find("applicability") is not None
-                        else None,
+                        "start": (
+                            elt.find("applicability/wef").text  # type: ignore
+                            if elt.find("applicability") is not None
+                            else None
+                        ),
+                        "stop": (
+                            elt.find("applicability/unt").text  # type: ignore
+                            if elt.find("applicability") is not None
+                            else None
+                        ),
                     },
                     **{
-                        "airspace": elt.find(  # type: ignore
-                            refloc + "ReferenceLocationAirspace/id"
-                        ).text
-                        if elt.find(refloc + "ReferenceLocationAirspace")
-                        is not None
-                        else None,
-                        "aerodrome": elt.find(  # type: ignore
-                            refloc + "ReferenceLocationAerodrome/id"
-                        ).text
-                        if elt.find(refloc + "ReferenceLocationAerodrome")
-                        is not None
-                        else None,
+                        "airspace": (
+                            elt.find(  # type: ignore
+                                refloc + "ReferenceLocationAirspace/id"
+                            ).text
+                            if elt.find(refloc + "ReferenceLocationAirspace")
+                            is not None
+                            else None
+                        ),
+                        "aerodrome": (
+                            elt.find(  # type: ignore
+                                refloc + "ReferenceLocationAerodrome/id"
+                            ).text
+                            if elt.find(refloc + "ReferenceLocationAerodrome")
+                            is not None
+                            else None
+                        ),
                     },
                     **{
-                        "fl_min": elt.find(  # type: ignore
-                            "location/flightLevels/min/level"
-                        ).text
-                        if elt.find("location/flightLevels/min/level")
-                        is not None
-                        else 0,
-                        "fl_max": elt.find(  # type: ignore
-                            "location/flightLevels/max/level"
-                        ).text
-                        if elt.find("location/flightLevels/max/level")
-                        is not None
-                        else 999,
+                        "fl_min": (
+                            elt.find(  # type: ignore
+                                "location/flightLevels/min/level"
+                            ).text
+                            if elt.find("location/flightLevels/min/level") is not None
+                            else 0
+                        ),
+                        "fl_max": (
+                            elt.find(  # type: ignore
+                                "location/flightLevels/max/level"
+                            ).text
+                            if elt.find("location/flightLevels/max/level") is not None
+                            else 999
+                        ),
                     },
                 }
                 for elt in self.reply.findall("data/regulations/item")
@@ -261,12 +264,132 @@ class RegulationList(DataFrameMixin, B2BReply):
         for feat in ["start", "stop"]:
             if feat in self.data.columns:
                 self.data = self.data.assign(
-                    **{
-                        feat: self.data[feat].apply(
-                            lambda x: pd.Timestamp(x, tz="utc")
-                        )
-                    }
+                    **{feat: self.data[feat].apply(lambda x: pd.Timestamp(x, tz="utc"))}
                 )
+
+
+class ATFCMSituation(DataFrameMixin, B2BReply):
+    columns_options = dict(
+        regulationId=dict(style="blue bold"),
+        state=dict(),
+        type=dict(),
+        reason=dict(),
+        start=dict(),
+        stop=dict(),
+        tvId=dict(),
+        airspace=dict(),
+        aerodrome=dict(),
+    )
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        if len(args) == 0 and "data" not in kwargs:
+            super().__init__(data=None, **kwargs)
+        else:
+            super().__init__(*args, **kwargs)
+
+    @classmethod
+    def fromB2BReply(
+        cls: Type[ATFCMSituationTypeVar], r: B2BReply
+    ) -> ATFCMSituationTypeVar:
+        assert r.reply is not None
+        return cls.fromET(r.reply)
+
+    @classmethod
+    def fromET(
+        cls: Type[ATFCMSituationTypeVar], tree: ElementTree.Element
+    ) -> ATFCMSituationTypeVar:
+        instance = cls()
+        instance.reply = tree
+        instance.build_df()
+        return instance
+
+    # def __getitem__(self, item: str) -> Optional[RegulationInfo]:
+    #     assert self.reply is not None
+    #     for elt in self.reply.findall("data/regulations/item"):
+    #         key = elt.find("regulationId")
+    #         assert key is not None
+    #         if key.text == item:
+    #             return RegulationInfo.fromET(elt)
+
+    #     return None
+
+    def _ipython_key_completions_(self) -> Set[str]:
+        return set(self.data.RegulationId.unique())
+
+    def build_df(self) -> None:
+        assert self.reply is not None
+
+        self.counts = pd.DataFrame(
+            {
+                "sendTime": self.reply.find("sendTime").text,
+                "lastUpdated": self.reply.find("data/lastUpdated").text,
+                "landedFlightCount": self.reply.find(
+                    "data/counts/landedFlightCount"
+                ).text,
+                "airborneFlightCount": self.reply.find(
+                    "data/counts/airborneFlightCount"
+                ).text,
+                "expectedFlightCount": self.reply.find(
+                    "data/counts/expectedFlightCount"
+                ).text,
+                "undefinedSlotComplianceFlightCount": self.reply.find(
+                    "data/counts/undefinedSlotComplianceFlightCount"
+                ).text,
+                "beforeSlotDepartureFlightCount": self.reply.find(
+                    "data/counts/beforeSlotDepartureFlightCount"
+                ).text,
+                "slotCompliantFlightCount": self.reply.find(
+                    "data/counts/slotCompliantFlightCount"
+                ).text,
+                "afterSlotDepartureFlightCount": self.reply.find(
+                    "data/counts/afterSlotDepartureFlightCount"
+                ).text,
+                "atfmMeasureSuspendedFlightCount": self.reply.find(
+                    "data/counts/atfmMeasureSuspendedFlightCount"
+                ).text,
+                "famSuspendedFlightCount": self.reply.find(
+                    "data/counts/famSuspendedFlightCount"
+                ).text,
+                "delayedFlightCount": self.reply.find(
+                    "data/counts/delayedFlightCount"
+                ).text,
+                "significantlyDelayedFlightCount": self.reply.find(
+                    "data/counts/significantlyDelayedFlightCount"
+                ).text,
+                "forecastFlightCount": self.reply.find(
+                    "data/counts/forecastFlightCount"
+                ).text,
+            },
+            index=[0],
+        )
+        self.delays = pd.DataFrame(
+            {
+                "enRouteDelay": self.reply.find("data/delays/enRouteDelay").text,
+                "airportDelay": self.reply.find("data/delays/airportDelay").text,
+                **{
+                    elt.find("key").text: elt.find("value").text
+                    for elt in self.reply.findall(
+                        "data/delays/delaysPerRegulationReason/item"
+                    )
+                },
+            },
+            index=[0],
+        )
+        self.regulations = pd.DataFrame.from_records(
+            [
+                {
+                    "regulationId": elt.find("regulationId").text,
+                    "wef": elt.find("period/wef").text,
+                    "unt": elt.find("period/unt").text,
+                    "trafficVolumeId": elt.find("trafficVolumeId").text,
+                    "regulationState": elt.find("regulationState").text,
+                    "regulationReason": elt.find("regulationReason").text,
+                    "delay": elt.find("delay").text,
+                    "impactedFlightCount": elt.find("impactedFlightCount").text,
+                }
+                for elt in self.reply.findall("data/regulations/item")
+            ]
+        )
 
 
 class Measures:
@@ -277,6 +400,8 @@ class Measures:
         traffic_volumes: None | list[str] = None,
         regulations: None | str | list[str] = None,
         fields: None | list[str] = None,
+        reasons: None | list[str] = None,
+        states: None | list[str] = None,
     ) -> None | RegulationList:
         """Returns information about a (set of) given regulation(s).
 
@@ -309,6 +434,8 @@ class Measures:
         if isinstance(regulations, str):
             regulations = [regulations]
         _regulations = regulations if regulations is not None else []
+        _reasons = reasons if reasons is not None else []
+        _states = states if states is not None else []
 
         data = REQUESTS["RegulationListRequest"].format(
             send_time=pd.Timestamp("now", tz="utc"),
@@ -323,21 +450,43 @@ class Measures:
                 + "</requestedRegulationFields>"
             ),
             tvs=(
-                "<tvs>"
-                + "\n".join(f"<item>{tv}</item>" for tv in _tvs)
-                + "</tvs>"
-            )
-            if traffic_volumes is not None
-            else "",
+                ("<tvs>" + "\n".join(f"<item>{tv}</item>" for tv in _tvs) + "</tvs>")
+                if traffic_volumes is not None
+                else ""
+            ),
             regulations=(
-                "<regulations>"
-                + "\n".join(
-                    f"<item>{regulation}</item>" for regulation in _regulations
+                (
+                    "<regulations>"
+                    + "\n".join(
+                        f"<item>{regulation}</item>" for regulation in _regulations
+                    )
+                    + "</regulations>"
                 )
-                + "</regulations>"
-            )
-            if regulations is not None
-            else "",
+                if regulations is not None
+                else ""
+            ),
+            reasons=(
+                "<reasons>"
+                + "\n".join(f"<item>{reason}</item>" for reason in _reasons)
+                + "</reasons>"
+            ),
+            regulationStates=(
+                "<regulationStates>"
+                + "\n".join(
+                    f"<item>{regulationState}</item>" for regulationState in _states
+                )
+                + "</regulationStates>"
+            ),
         )
         rep = self.post(data)  # type: ignore
         return RegulationList.fromB2BReply(rep)
+
+    def atfcm_situation(self, day):
+        if day is not None:
+            day = pd.Timestamp(day, tz="utc")
+        data = REQUESTS["RetrieveATFCMSituationRequest"].format(
+            send_time=pd.Timestamp("now", tz="utc"),
+            day=day,
+        )
+        rep = self.post(data)  # type: ignore
+        return ATFCMSituation.fromB2BReply(rep)

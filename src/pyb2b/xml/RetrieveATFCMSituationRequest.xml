@@ -1,0 +1,7 @@
+<fw:ATFCMSituationRequest xmlns:fw="eurocontrol/cfmu/b2b/FlowServices">
+    <sendTime>{send_time:%Y-%m-%d %H:%M:%S}</sendTime>
+    <dataset>
+        <type>OPERATIONAL</type>
+    </dataset>
+    <day>{day:%Y-%m-%d}</day>
+</fw:ATFCMSituationRequest>
