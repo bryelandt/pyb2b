@@ -95,7 +95,9 @@ class RegulationInfo(B2BReply):
     @property
     def location(self) -> Optional[str]:
         assert self.reply is not None
-        elt = self.reply.find("location/referenceLocation-ReferenceLocationAirspace/id")
+        elt = self.reply.find(
+            "location/referenceLocation-ReferenceLocationAirspace/id"
+        )
         if elt is not None:
             return elt.text
         elt = self.reply.find(
@@ -115,7 +117,9 @@ class RegulationInfo(B2BReply):
     def fl_max(self) -> int:
         assert self.reply is not None
         elt = self.reply.find("location/flightLevels/max/level")
-        return int(elt.text) if elt is not None and elt.text is not None else 999
+        return (
+            int(elt.text) if elt is not None and elt.text is not None else 999
+        )
 
     def __getattr__(self, name: str) -> str:
         cls = type(self)
@@ -224,14 +228,16 @@ class RegulationList(DataFrameMixin, B2BReply):
                             elt.find(  # type: ignore
                                 "location/flightLevels/min/level"
                             ).text
-                            if elt.find("location/flightLevels/min/level") is not None
+                            if elt.find("location/flightLevels/min/level")
+                            is not None
                             else 0
                         ),
                         "fl_max": (
                             elt.find(  # type: ignore
                                 "location/flightLevels/max/level"
                             ).text
-                            if elt.find("location/flightLevels/max/level") is not None
+                            if elt.find("location/flightLevels/max/level")
+                            is not None
                             else 999
                         ),
                     },
@@ -264,7 +270,11 @@ class RegulationList(DataFrameMixin, B2BReply):
         for feat in ["start", "stop"]:
             if feat in self.data.columns:
                 self.data = self.data.assign(
-                    **{feat: self.data[feat].apply(lambda x: pd.Timestamp(x, tz="utc"))}
+                    **{
+                        feat: self.data[feat].apply(
+                            lambda x: pd.Timestamp(x, tz="utc")
+                        )
+                    }
                 )
 
 
@@ -319,10 +329,12 @@ class ATFCMSituation(DataFrameMixin, B2BReply):
     def build_df(self) -> None:
         assert self.reply is not None
 
+        sendTime = self.reply.find("sendTime").text
+        lastUpdated = self.reply.find("data/lastUpdated").text
         self.counts = pd.DataFrame(
             {
-                "sendTime": self.reply.find("sendTime").text,
-                "lastUpdated": self.reply.find("data/lastUpdated").text,
+                "sendTime": sendTime,
+                "lastUpdated": lastUpdated,
                 "landedFlightCount": self.reply.find(
                     "data/counts/landedFlightCount"
                 ).text,
@@ -364,8 +376,14 @@ class ATFCMSituation(DataFrameMixin, B2BReply):
         )
         self.delays = pd.DataFrame(
             {
-                "enRouteDelay": self.reply.find("data/delays/enRouteDelay").text,
-                "airportDelay": self.reply.find("data/delays/airportDelay").text,
+                "sendTime": sendTime,
+                "lastUpdated": lastUpdated,
+                "enRouteDelay": self.reply.find(
+                    "data/delays/enRouteDelay"
+                ).text,
+                "airportDelay": self.reply.find(
+                    "data/delays/airportDelay"
+                ).text,
                 **{
                     elt.find("key").text: elt.find("value").text
                     for elt in self.reply.findall(
@@ -378,6 +396,8 @@ class ATFCMSituation(DataFrameMixin, B2BReply):
         self.regulations = pd.DataFrame.from_records(
             [
                 {
+                    "sendTime": sendTime,
+                    "lastUpdated": lastUpdated,
                     "regulationId": elt.find("regulationId").text,
                     "wef": elt.find("period/wef").text,
                     "unt": elt.find("period/unt").text,
@@ -450,7 +470,11 @@ class Measures:
                 + "</requestedRegulationFields>"
             ),
             tvs=(
-                ("<tvs>" + "\n".join(f"<item>{tv}</item>" for tv in _tvs) + "</tvs>")
+                (
+                    "<tvs>"
+                    + "\n".join(f"<item>{tv}</item>" for tv in _tvs)
+                    + "</tvs>"
+                )
                 if traffic_volumes is not None
                 else ""
             ),
@@ -458,7 +482,8 @@ class Measures:
                 (
                     "<regulations>"
                     + "\n".join(
-                        f"<item>{regulation}</item>" for regulation in _regulations
+                        f"<item>{regulation}</item>"
+                        for regulation in _regulations
                     )
                     + "</regulations>"
                 )
@@ -473,7 +498,8 @@ class Measures:
             regulationStates=(
                 "<regulationStates>"
                 + "\n".join(
-                    f"<item>{regulationState}</item>" for regulationState in _states
+                    f"<item>{regulationState}</item>"
+                    for regulationState in _states
                 )
                 + "</regulationStates>"
             ),
