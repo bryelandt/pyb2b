@@ -184,9 +184,14 @@ class RegulationList(DataFrameMixin, B2BReply):
 
         refloc = "location/referenceLocation-"
 
+        for elt in self.reply:
+            print(list(elt.iter()))
+        sendTime = self.reply.find("sendTime").text
+
         self.data = pd.DataFrame.from_records(
             [
                 {
+                    "sendTime": sendTime,
                     **{p.tag: p.text for p in elt if p.text is not None},
                     **{
                         p.tag: p.text
@@ -252,6 +257,7 @@ class RegulationList(DataFrameMixin, B2BReply):
         self.data = self.data.rename(columns=rename_cols)
         self.data = self.data[
             [
+                "sendTime",
                 "regulationId",
                 "state",
                 "type",
