@@ -17,7 +17,7 @@ b2b_airac = 'pyb2b.console.airac:main'
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 pandas = "^2.0.3"
-requests = ">=2.31.0"
+requests = "2.31.0"
 requests-pkcs12 = ">=1.10"
 pyopenssl = ">=23.2.0"
 tqdm = ">=4.65.0"
