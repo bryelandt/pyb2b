@@ -6,10 +6,9 @@ from typing import ClassVar, TypedDict
 from xml.dom import minidom
 from xml.etree import ElementTree
 
+import pandas as pd
 from requests import Session
 from tqdm.rich import tqdm
-
-import pandas as pd
 
 from .flight import FlightManagement
 from .flow import Measures
@@ -98,7 +97,10 @@ class B2B(FlightManagement, Measures):
             headers={"Content-Type": "application/xml"},
         )
         res.raise_for_status()
-        tree = ElementTree.fromstring(res.content)
+        try:
+            tree = ElementTree.fromstring(res.content)
+        except ElementTree.ParseError:
+            raise RuntimeError(res.content)
 
         if tree is None:
             raise RuntimeError("Unexpected error")
