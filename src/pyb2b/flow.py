@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Optional, Set, Type, TypeVar
 from xml.etree import ElementTree
 
@@ -41,6 +42,7 @@ default_regulation_fields: Set[str] = {
 # https://github.com/python/mypy/issues/2511
 RegulationListTypeVar = TypeVar("RegulationListTypeVar", bound="RegulationList")
 ATFCMSituationTypeVar = TypeVar("ATFCMSituationTypeVar", bound="ATFCMSituation")
+TrafficCountsByTrafficVolumeTypeVar = TypeVar("TrafficCountsByTrafficVolumeTypeVar", bound="TrafficCountsByTrafficVolume")
 
 
 class RegulationInfo(B2BReply):
@@ -414,6 +416,86 @@ class ATFCMSituation(DataFrameMixin, B2BReply):
                 for elt in self.reply.findall("data/regulations/item")
             ]
         )
+class TrafficCountsByTrafficVolume(DataFrameMixin, B2BReply):
+    columns_options = dict(
+        regulationId=dict(style="blue bold"),
+        state=dict(),
+        type=dict(),
+        reason=dict(),
+        start=dict(),
+        stop=dict(),
+        tvId=dict(),
+        airspace=dict(),
+        aerodrome=dict(),
+    )
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        if len(args) == 0 and "data" not in kwargs:
+            super().__init__(data=None, **kwargs)
+        else:
+            super().__init__(*args, **kwargs)
+
+    @classmethod
+    def fromB2BReply(
+        cls: Type[TrafficCountsByTrafficVolumeTypeVar], r: B2BReply
+    ) -> TrafficCountsByTrafficVolumeTypeVar:
+        assert r.reply is not None
+        return cls.fromET(r.reply)
+
+    @classmethod
+    def fromET(
+        cls: Type[TrafficCountsByTrafficVolumeTypeVar], tree: ElementTree.Element
+    ) -> TrafficCountsByTrafficVolumeTypeVar:
+        instance = cls()
+        instance.reply = tree
+        instance.build_df()
+        return instance
+
+    # def __getitem__(self, item: str) -> Optional[RegulationInfo]:
+    #     assert self.reply is not None
+    #     for elt in self.reply.findall("data/regulations/item"):
+    #         key = elt.find("regulationId")
+    #         assert key is not None
+    #         if key.text == item:
+    #             return RegulationInfo.fromET(elt)
+
+    #     return None
+
+    def _ipython_key_completions_(self) -> Set[str]:
+        return set(self.data.RegulationId.unique())
+
+    def build_df(self) -> None:
+        assert self.reply is not None
+
+        sendTime = self.reply.find("sendTime").text
+        traffic_window_wef = self.reply.find("data/effectiveTrafficWindow/wef").text
+        traffic_window_unt = self.reply.find("data/effectiveTrafficWindow/unt").text
+
+        data = []
+        for elt in self.reply.findall("data/counts/item"):
+            demand = None
+            regulated_demand = None
+            load = None
+            for val in elt.findall("value/item"):
+                demand = val.find("value/totalCounts").text if val.find("key").text == "DEMAND" else demand
+                regulated_demand = val.find("value/totalCounts").text if val.find("key").text == "REGULATED_DEMAND" else regulated_demand
+                load = val.find("value/totalCounts").text if val.find("key").text == "LOAD" else load
+            data.append(
+                pd.DataFrame(
+                    {
+                        "sendTime": sendTime,
+                        "traffic_window_wef": traffic_window_wef,
+                        "traffic_window_unt": traffic_window_unt,
+                        "wef": elt.find("key/wef").text,
+                        "unt": elt.find("key/unt").text,
+                        "demand": demand,
+                        "regulated_demand": regulated_demand,
+                        "load": load,
+                    },
+                index=[0]
+                )
+            )
+        self.data = pd.concat(data, axis=0, ignore_index=True)
 
 
 class Measures:
@@ -520,3 +602,28 @@ class Measures:
         )
         rep = self.post(data)  # type: ignore
         return ATFCMSituation.fromB2BReply(rep)
+
+
+    def traffic_counts_by_traffic_volume(
+            self,
+            traffic_volume: str,
+            traffic_window_wef: str | None = None,
+            traffic_window_unt: str | None = None,
+            duration: str | None = "0020",
+            step: str | None = "0020",
+            calculation_type: str | None = "ENTRY",
+        ):
+        traffic_window_wef = pd.Timestamp(traffic_window_wef, tz="utc") if traffic_window_wef is not None else pd.Timestamp("now", tz="utc")
+        traffic_window_unt = pd.Timestamp(traffic_window_unt, tz="utc") if traffic_window_unt is not None else pd.Timestamp("now", tz="utc") + pd.Timedelta(hours=5)
+        data = REQUESTS["TrafficCountsByTrafficVolumeRequest"].format(
+            send_time=pd.Timestamp("now", tz="utc"),
+            traffic_window_wef=traffic_window_wef,
+            traffic_window_unt=traffic_window_unt,
+            duration=duration,
+            step=step,
+            traffic_volume=traffic_volume,
+            calculation_type=calculation_type,
+
+        )
+        rep = self.post(data)  # type: ignore
+        return TrafficCountsByTrafficVolume.fromB2BReply(rep)

@@ -1,0 +1,27 @@
+<fw:TrafficCountsByTrafficVolumeRequest xmlns:fw="eurocontrol/cfmu/b2b/FlowServices">
+    <!--Optional:-->
+    <sendTime>{send_time:%Y-%m-%d %H:%M:%S}</sendTime>
+    <dataset>
+        <type>OPERATIONAL</type>
+    </dataset>
+    <trafficWindow>
+        <wef>{traffic_window_wef:%Y-%m-%d %H:%M}</wef>
+        <unt>{traffic_window_unt:%Y-%m-%d %H:%M}</unt>
+    </trafficWindow>
+    <includeProposalFlights>true</includeProposalFlights>
+    <includeForecastFlights>true</includeForecastFlights>
+    <!--Optional:-->
+    <trafficTypes>
+        <item>DEMAND</item>
+        <item>REGULATED_DEMAND</item>
+        <item>LOAD</item>
+    </trafficTypes>
+    <subTotalComputeMode>NO_SUB_TOTALS</subTotalComputeMode>
+    <countsInterval>
+        <duration>{duration}</duration>
+        <step>{step}</step>
+    </countsInterval>
+    <trafficVolume>{traffic_volume}</trafficVolume>
+    <calculationType>{calculation_type}</calculationType>
+    <includeInvisibleFlights>true</includeInvisibleFlights>
+</fw:TrafficCountsByTrafficVolumeRequest>
